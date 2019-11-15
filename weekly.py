@@ -1,6 +1,6 @@
 #! /usr/bin/python3
 
-import json, argparse, re
+import json, argparse, re, requests
 from datetime import datetime
 
 parser = argparse.ArgumentParser(description='Process a JSON file from live.draftkings.com and contest results CSV to output data for provided week')
@@ -8,28 +8,27 @@ parser.add_argument('week', metavar='week', type=int, nargs=1,
                     help='NFL season week #')
 parser.add_argument('filename', metavar='file', type=str, nargs=2,
                     help='The absolute or relative path to the files being processes')
-parser.add_argument('-c', '--contest', dest='contest_id', metavar='contest_id', type=int, nargs=1,
-                    help='Number found in DraftKings contest URL')
-parser.add_argument('-b', '--bye', dest='bye_teams', metavar='bye_teams', type=str, nargs=1,
-                    help='List of bye-week teams as a string')
-
 
 args = parser.parse_args()
 weekly_file = args.filename[0]
 results_file = args.filename[1]
 week = str(args.week[0])
-
-if args.contest_id:
-    contest_id = str(args.contest_id[0])
-else:
-    contest_id = ''
-
-if args.bye_teams:
-    bye_teams = args.bye_teams[0]
-else:
-    bye_teams = ''
-
 today = datetime.now().strftime('%Y-%m-%d')
+
+# Get contest_id (string) from results_file (string), assuming it exists just before extension (default)
+results_file_splt = re.split('/|-|\.',results_file)
+contest_id = results_file_splt[len(results_file_splt) - 2]
+
+# Get list of bye_teams by downloading and parsing data from Yahoo Sports
+get_game_data = 'https://api-secure.sports.yahoo.com/v1/editorial/s/scoreboard?leagues=nfl&week={}&season=current'.format(week)
+r = requests.get(url=get_game_data)
+game_data = r.json()['service']['scoreboard']
+bye_teams_raw = set(game_data['bye_teams'])
+bye_teams = []
+for team in game_data['teams']:
+    if team in bye_teams_raw:
+        bye_teams.append(game_data['teams'][team]['full_name'])
+bye_teams = ', '.join(bye_teams)
 
 with open(weekly_file) as json_file:
     '''
