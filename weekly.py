@@ -136,9 +136,11 @@ for user in users[:3]:
     winner_str += '\t<li>{}</li>\n'.format(user)
 winner_str += '</ol>'
 
+# Write winner_str to file (results_output)
 with open('2019-week-'+ week + '.html', 'w+') as results_output:
     results_output.write(winner_str)
 
+# Replace placeholders in weekly-template with values listed below
 with open('weekly-template.md', 'r') as weekly_template:
     with open(today + '-week-' + week+ '-results.md', 'w+') as weekly_output:
         template_str = weekly_template.read()
@@ -155,6 +157,7 @@ with open('weekly-template.md', 'r') as weekly_template:
             week=week)
         )
 
+# Output useful data on the command line
 print("Points (in alphabetical order):\n", '\n'.join(sorted_list), sep='')
 
 print("\nMVP: ", mvp['fullName'])
