@@ -1,23 +1,14 @@
 #! /usr/bin/python3
 
-import json, argparse, re, requests
+import json, re, requests
 from datetime import datetime
 
-parser = argparse.ArgumentParser(description='Process a JSON file from live.draftkings.com and contest results CSV to output data for provided week')
-parser.add_argument('week', metavar='week', type=int, nargs=1,
-                    help='NFL season week #')
-parser.add_argument('filename', metavar='file', type=str, nargs=2,
-                    help='The absolute or relative path to the files being processes')
-
-args = parser.parse_args()
-weekly_file = args.filename[0]
-results_file = args.filename[1]
-week = str(args.week[0])
 today = datetime.now().strftime('%Y-%m-%d')
 
-# Get contest_id (string) from results_file (string), assuming it exists just before extension (default)
-results_file_splt = re.split('/|-|\.',results_file)
-contest_id = results_file_splt[len(results_file_splt) - 2]
+# Capture user input to assign values to variables
+week = str(input('2019 NFL week #: '))
+contest_id = str(input('Contest ID: '))
+results_file = input('Path to contest standings files: ')
 
 # Get list of bye_teams by downloading and parsing data from Yahoo Sports
 get_game_data = 'https://api-secure.sports.yahoo.com/v1/editorial/s/scoreboard?leagues=nfl&week={}&season=current'.format(week)
@@ -30,21 +21,47 @@ for team in game_data['teams']:
         bye_teams.append(game_data['teams'][team]['display_name'])
 bye_teams = ', '.join(bye_teams)
 
-with open(weekly_file) as json_file:
-    '''
-    Parse the file (weekly_file) to get a dict using json
-    Use the resulting dict (raw) and filter players that have a salary and stats
-    This creates a list (players) containing dicts
-    '''
-    raw = json.load(json_file).get('data')
-    players = [x for x in raw if x.get('salary') and x['stats']]
-    players = sorted(players, key=lambda x: x['fantasyPoints'], reverse=True)
+# Get data from live.draftkings.com for week specified by user input
+data = '{"sport":"nfl","embed":"stats"}'
 
-# Add an element to each dict (player) which is contains a quotient (fpts_salary)
+# Visit dk_live to obtain cookies used to make POST request to dk_api
+dk_live = 'https://live.draftkings.com/sports/nfl/seasons/2019/week/{}/games/all'.format(week)
+dk_api = 'https://live.draftkings.com/api/v2/leaderboards/players/seasons/2019/weeks/{}'.format(week)
+
+# Create a session to maintain cookies
+s = requests.session()
+s0 = s.get(dk_live)
+# Create headers for POST request
+headers = {
+    'Host': 'live.draftkings.com',
+    'Connection': 'keep-alive',
+    'Content-Length': '31',
+    'Origin': 'https://live.draftkings.com',
+    'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 12499.46.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.81 Safari/537.36',
+    'Content-Type': 'application/json',
+    'Accept': '*/*',
+    'Sec-Fetch-Site': 'same-origin',
+    'Sec-Fetch-Mode': 'cors',
+    'Referer': 'https://live.draftkings.com/sports/nfl/seasons/2019/week/{}/games/all'.format(week),
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept-Language': 'en-US,en;q=0.9,la;q=0.8'
+}
+# Make a post request including headers and data
+dk_resp = s.post(dk_api, headers=headers, data=data)
+
+# Convert dk_resp (string) into a JSON object (dict)
+raw = json.loads(dk_resp.text).get('data')
+# Include only players with stats and salary, assuming players with neither were not drafted
+players = [x for x in raw if x.get('salary') and x['stats']]
+# Sort players in descending order based on fantasyPoints
+players = sorted(players, key=lambda x: x['fantasyPoints'], reverse=True)
+
 for player in players:
+    # Create fpts_salary (int:quotient of fantasyPoints and salary) element for each player (dict)
     fpts_salary = player['fantasyPoints'] / player['salary']
     player.update({"fpts_salary": fpts_salary})
 
+    # Create a fullName element for each player by combining firstName (string) and lastName (string)
     fullName = player['firstName']
     if player['lastName']:
         fullName += ' {}'.format(player['lastName'])
@@ -54,11 +71,9 @@ for player in players:
 # Create a list (bust_players) of dicts where salary is greater than or equal to 5000
 bust_players = [x for x in players if x.get('salary') >= 5000]
 
-'''
-MVP is the player with the most fantasyPoints
-Sleeper is the player with the most fpts_salary (see previously added element)
-Bust is the player with the least fpts_salary from bust_players list (see previously created list)
-'''
+# MVP is the player with the most fantasyPoints
+# Sleeper is the player with the most fpts_salary (see previously added element)
+# Bust is the player with the least fpts_salary from bust_players list (see previously created list)
 mvp = max(players, key=lambda x: x['fantasyPoints'])
 sleeper = max(players, key=lambda x: x['fpts_salary'])
 bust = min(bust_players, key=lambda x: x['fpts_salary'])
@@ -88,11 +103,9 @@ with open(results_file) as csv_file:
         if lines[0] and bust['fullName'] in lines[5]:
             bust_draft.append(lines[2])
         
-        '''
-        Add drafted players to drafted set
-        Create draft (list) by splitting each lines[5], omitting positions (QB, RB, etc.)
-        Add each draft_player (item) from draft (list) to drafted (set), while trimming (strip()) whitespace
-        '''
+        # Add drafted players to drafted set
+        # Create draft (list) by splitting each lines[5], omitting positions (QB, RB, etc.)
+        # Add each draft_player (item) from draft (list) to drafted (set), while trimming (strip()) whitespace
         if lines[5] != 'Lineup' and lines[5]:
             draft = re.split('QB| RB | WR | TE | FLEX | DST ', lines[5])
             for draft_player in draft:
