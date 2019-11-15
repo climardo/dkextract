@@ -27,7 +27,7 @@ bye_teams_raw = set(game_data['bye_teams'])
 bye_teams = []
 for team in game_data['teams']:
     if team in bye_teams_raw:
-        bye_teams.append(game_data['teams'][team]['full_name'])
+        bye_teams.append(game_data['teams'][team]['display_name'])
 bye_teams = ', '.join(bye_teams)
 
 with open(weekly_file) as json_file:
