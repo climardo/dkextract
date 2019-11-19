@@ -9,9 +9,9 @@ Congratulations to [this week's](https://www.draftkings.com/contest/gamecenter/{
 
 {{% include 2019-week-{week}.html %}}
 
-Some content
+Coming soon...
 
-Week {week} Bye teams: {bye_teams}
+This week's bye teams: {bye_teams}
 
 ##### MVP (Most fpts)
 <figure class="figure">
@@ -38,7 +38,7 @@ Week {week} Bye teams: {bye_teams}
 </figure>
 <i>Embedded Tweet</i>
 
-##### Week 10 analysis
+##### Weekly analysis
 <ul class="list-unstyled" id="pro-links">
     <a href="#" target="_blank"><li>Title</li></a>
     <a href="#" target="_blank"><li>Title</li></a>
