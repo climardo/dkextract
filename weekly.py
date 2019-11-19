@@ -11,7 +11,7 @@ contest_id = str(input('Contest ID: '))
 results_file = input('Path to contest standings files: ')
 
 # Get list of bye_teams by downloading and parsing data from Yahoo Sports
-get_game_data = 'https://api-secure.sports.yahoo.com/v1/editorial/s/scoreboard?leagues=nfl&week={}&season=current'.format(week)
+get_game_data = 'https://api-secure.sports.yahoo.com/v1/editorial/s/scoreboard?leagues=nfl&week={}&season=current'.format(str(int(week) + 1))
 r = requests.get(url=get_game_data)
 game_data = r.json()['service']['scoreboard']
 bye_teams_raw = set(game_data['bye_teams'])
