@@ -31,7 +31,6 @@ This week's bye teams: {bye_teams}
     <figcaption class="figure-caption">{bust_draft}</figcaption>
 </figure>
 
-
 ##### Draft Dodger (Most fpts undrafted)
 <figure class="figure">
     <img class="img-fluid" src="/assets/images/2019/{draft_dodger_png}" width="364px"/>

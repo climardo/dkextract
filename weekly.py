@@ -14,12 +14,15 @@ results_file = input('Path to contest standings files: ')
 get_game_data = 'https://api-secure.sports.yahoo.com/v1/editorial/s/scoreboard?leagues=nfl&week={}&season=current'.format(str(int(week) + 1))
 r = requests.get(url=get_game_data)
 game_data = r.json()['service']['scoreboard']
-bye_teams_raw = set(game_data['bye_teams'])
-bye_teams = []
-for team in game_data['teams']:
-    if team in bye_teams_raw:
-        bye_teams.append(game_data['teams'][team]['display_name'])
-bye_teams = ', '.join(bye_teams)
+if 'bye_teams' in game_data.keys():
+    bye_teams_raw = set(game_data['bye_teams'])
+    bye_teams = []
+    for team in game_data['teams']:
+        if team in bye_teams_raw:
+            bye_teams.append(game_data['teams'][team]['display_name'])
+    bye_teams = ', '.join(bye_teams)
+else:
+    bye_teams = "None"
 
 # Get data from live.draftkings.com for week specified by user input
 data = '{"sport":"nfl","embed":"stats"}'
