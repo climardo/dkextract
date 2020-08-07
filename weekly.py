@@ -6,7 +6,7 @@ from datetime import datetime
 today = datetime.now().strftime('%Y-%m-%d')
 
 # Capture user input to assign values to variables
-week = str(input('2019 NFL week #: '))
+week = str(input('2020 NFL week #: '))
 contest_id = str(input('Contest ID: '))
 results_file = input('Path to contest standings files: ')
 
