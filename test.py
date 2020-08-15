@@ -1,15 +1,17 @@
 import json, re, requests, sys, private_data, pickle, os.path, time
 from os import path
-
+# Used to test processing time
 start_time = time.time()
 
+# Test values
 week = "16"
 year = "2019"
 contestid = "83207559"
+
+# Global value modified b login_to_dk()
 login_valid = False
 
 # List of DraftKings URLS for GET and POST requests
-dk_contest = f"https://www.draftkings.com/contest/gamecenter/{contestid}"
 dk_live= f"https://live.draftkings.com/sports/nfl/seasons/{year}/week/{week}/games/all"
 
 # Create a session to maintain cookies
@@ -146,6 +148,8 @@ def get_draftid(session, contest_id):
     return get_member_scores(session, contest_id)["leader"]["draftGroupId"]
 
 def get_member_key(session, contest_id, user_name):
+    # Parse through get_member_scores() looking for the member_key of given user_name
+    # This value is used by get_member_lineup()
     for member in get_member_scores(session, contest_id)["leaderBoard"]:
         if member["userName"] == user_name:
             member_key = member["entryKey"]
@@ -155,8 +159,11 @@ def get_member_key(session, contest_id, user_name):
     return member_key
 
 def get_member_lineup(session, contest_id, user_name):
+    # Use get_draft_id() and get_member_key() to get values needed for roster_url
     draft_id = get_draftid(session, contestid)
     member_key = get_member_key(session, contest_id, user_name)
+
+    # The API endpoint for a specific user's lineup
     roster_url = f"https://api.draftkings.com/scores/v2/entries/{draft_id}/{member_key}?format=json&embed=roster"
     # If login_to_dk is successful, then return JSON payload as a dictionary
     if login_to_dk(session):
@@ -169,6 +176,7 @@ def get_member_lineup(session, contest_id, user_name):
         return {}
 
 def get_all_lineups(session, contest_id):
+    # Get a list of each member's lineup
     all_lineups = []
     for member in get_member_scores(session, contest_id)["leaderBoard"]:
         user_name = member["userName"]
@@ -176,17 +184,23 @@ def get_all_lineups(session, contest_id):
     return all_lineups
 
 def list_all_drafted(session, contest_id):
+    # Return a list of all drafted players without duplcates
+    # players_name[] is used to compare each players with those already added to all_players[]
     all_players = []
     player_names =[]
+
+    # Filter through each member's list of players contained within get_member_lineup() output
     for member in get_member_scores(session, contest_id)["leaderBoard"]:
         user_name = member["userName"]
         user_lineup = get_member_lineup(session, contest_id, user_name)["entries"][0]["roster"]["scorecards"]
         for player in user_lineup:
+            # Each player's displayName is added to player_names[]. Subsequent players are tested against this list for uniqueness and added if not already found in the list.
             if player["displayName"] not in player_names:
                 player_names.append(player["displayName"])
                 all_players.append(player)
     return all_players
 
+# Example commands used to verify code
 print(json.dumps(list_all_drafted(s, contestid)))
 print("--- %s seconds ---" % (time.time() - start_time))
 exit()
