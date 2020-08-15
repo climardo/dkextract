@@ -17,9 +17,6 @@ dk_live= f"https://live.draftkings.com/sports/nfl/seasons/{year}/week/{week}/gam
 # Create a session to maintain cookies
 s = requests.session()
 
-# weekly_resp = s.post(dk_weekly, headers=weekly_headers, data=weekly_data)
-# weekly_json = json.loads(weekly_resp.text)["data"]
-
 def login_to_dk(session, cookies_file='stored_cookies', login_data=private_data.creds, strict=False):
     # The following lines read a global variable to reduce the time it takes to process this function
     # Without this check, calling this function would always verify cookies each time it is called
@@ -95,7 +92,7 @@ def store_cookies(session, cookies_file='stored_cookies'):
         with open(cookies_file, 'wb') as f:
             pickle.dump(session.cookies, f)
 
-def get_weekly(session, week, year=2020):
+def get_all_player_stats(session, week, year=2020):
     # Function to obtain JSON (as a dictionary) of all player stats including fantasy points and salary
     # Header used in POST request
     weekly_headers = {
@@ -117,11 +114,11 @@ def get_weekly(session, week, year=2020):
     weekly_data = '{"sport":"nfl","embed":"stats"}'
 
     # URL used in post request with parameters (week, year) passed in function
-    dk_weekly = f"https://live.draftkings.com/api/v2/leaderboards/players/seasons/{year}/weeks/{week}"
+    weekly_url = f"https://live.draftkings.com/api/v2/leaderboards/players/seasons/{year}/weeks/{week}"
 
     # If login_to_dk is successful, then return JSON payload as a dictionary
     if login_to_dk(session):
-        get_weekly = session.post(dk_weekly, headers=weekly_headers, data=weekly_data)
+        get_weekly = session.post(weekly_url, headers=weekly_headers, data=weekly_data)
         if get_weekly.status_code == requests.codes.ok:
             return json.loads(get_weekly.text)["data"]
         else:
@@ -201,6 +198,6 @@ def list_all_drafted(session, contest_id):
     return all_players
 
 # Example commands used to verify code
-print(json.dumps(list_all_drafted(s, contestid)))
+print(json.dumps(get_all_player_stats(s, 16, 2019)))
 print("--- %s seconds ---" % (time.time() - start_time))
 exit()
