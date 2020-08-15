@@ -184,16 +184,14 @@ def list_all_drafted(session, contest_id):
     # Return a list of all drafted players without duplcates
     # players_name[] is used to compare each players with those already added to all_players[]
     all_players = []
-    player_names =[]
 
     # Filter through each member's list of players contained within get_member_lineup() output
     for member in get_member_scores(session, contest_id)["leaderBoard"]:
         user_name = member["userName"]
         user_lineup = get_member_lineup(session, contest_id, user_name)["entries"][0]["roster"]["scorecards"]
         for player in user_lineup:
-            # Each player's displayName is added to player_names[]. Subsequent players are tested against this list for uniqueness and added if not already found in the list.
-            if player["displayName"] not in player_names:
-                player_names.append(player["displayName"])
+            # Add unique players to all_players list 
+            if not any(d['displayName'] == player['displayName'] for d in all_players):
                 all_players.append(player)
     return all_players
 
@@ -252,9 +250,27 @@ def get_sleeper(all_players):
 
     return sleeper
 
+def get_draft_dodger(all_players, all_drafted):
+    # This function assumes you use get_all_players() to supply all_players and list_all_drafted() for all_drafted
+    # Create a list of players from all_players that are not in all_drafted
+    # all_players may not containt displayName so try to compare first and if it fails then set_display_name() first
+    undrafted_players = []
+    try:
+        temp = all_players[0]['displayName']
+    except:
+        all_players = set_display_name(all_players)
+    finally:
+        for player in all_players:
+            if any(d['displayName'] == player['displayName'] for d in all_drafted):
+                undrafted_players.append(player)
+
+    draft_dodger = max(undrafted_players, key=lambda x: x['fantasyPoints'])
+
+    return draft_dodger
 
 # Example commands used to verify code
-all_players = get_all_players(s, 16, 2019)
-print(json.dumps(get_sleeper(all_players)))
+#all_players = get_all_players(s, 16, 2019)
+all_drafted = list_all_drafted(s, contestid)
+print(len(all_drafted))
 print("--- %s seconds ---" % (time.time() - start_time))
 exit()
