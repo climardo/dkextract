@@ -92,7 +92,7 @@ def store_cookies(session, cookies_file='stored_cookies'):
         with open(cookies_file, 'wb') as f:
             pickle.dump(session.cookies, f)
 
-def get_all_player_stats(session, week, year=2020):
+def get_all_players(session, week, year=2020):
     # Function to obtain JSON (as a dictionary) of all player stats including fantasy points and salary
     # Header used in POST request
     weekly_headers = {
@@ -197,7 +197,64 @@ def list_all_drafted(session, contest_id):
                 all_players.append(player)
     return all_players
 
+def set_fpts_salary(all_players):
+    # Provide a list of all players, probably using get_all_players()
+    # This function will return the list after adding ["fantasyPointsPerSalary"] to each item
+
+    # First, filter the list for only players with stats and salary
+    players = [player for player in all_players if player.get('salary') and player['stats']]
+
+    for player in players:
+        fpts_salary = player['fantasyPoints'] / player['salary']
+        player['fantasyPointsPerSalary'] = fpts_salary
+
+    return players
+
+def set_display_name(all_players):
+    # Provide a list of all players, probably using get_all_players()
+    # This function will return the list after adding ["displayName"] to each item
+    for player in all_players:
+        full_name = player['firstName']
+        if player['lastName']:
+            full_name += f" {player['lastName']}"
+            
+        player["displayName"] = full_name
+
+    return all_players
+
+def get_bust(all_players):
+    # Create a list (bust_players) of dicts where salary is greater than or equal to 5000
+    try:
+        bust_players = [x for x in all_players if x.get('salary') >= 5000]
+    except:
+        all_players = set_fpts_salary(all_players)
+        bust_players = [x for x in all_players if x.get('salary') >= 5000]
+
+    # From the previously create list, Assign the item with the lowest fantasyPointsPerSalary to bust
+    bust = min(bust_players, key=lambda x: x['fantasyPointsPerSalary'])
+
+    return bust
+
+def get_mvp(all_players):
+    # Return the item/player with highest fantasyPoints
+    mvp = max(all_players, key=lambda x: x['fantasyPoints'])
+
+    return mvp
+
+def get_sleeper(all_players):
+    # Return the item/player with highest fantasyPointsPerSalary
+    # If there is an error, it is likely because the key doesn't exist. Use set_fpts_salary() to correct this problem and try again
+    try:
+        sleeper = max(all_players, key=lambda x: x['fantasyPointsPerSalary'])
+    except:
+        all_players = set_fpts_salary(all_players)
+        sleeper = max(all_players, key=lambda x: x['fantasyPointsPerSalary'])
+
+    return sleeper
+
+
 # Example commands used to verify code
-print(json.dumps(get_all_player_stats(s, 16, 2019)))
+all_players = get_all_players(s, 16, 2019)
+print(json.dumps(get_sleeper(all_players)))
 print("--- %s seconds ---" % (time.time() - start_time))
 exit()
