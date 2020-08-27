@@ -1,5 +1,5 @@
 # About this project
-This tool was created to help manage a DraftKings league as the commissioner. It used to be a script that was used to generate a blog post template for [Platanofb.com](https://platanofv.com), a GitHub Pages project. Now, this tool is a group of functions that can be called to return data, which makes integration wit other projects, like a Flask website, possible. 
+This tool was created to help manage a DraftKings league as the commissioner. It used to be a script that was used to generate a blog post template for [Platanofb.com](https://platanofv.com), a GitHub Pages project. Now, this tool is a group of functions that can be called to return data, which makes integration with other projects, like a Flask website, possible. 
 
 One of the new features is `login_to_dk()` which logs in to DraftKings and store the cookies to a file; this enables getting contest details automatically, an improvement over downloading the contest results CSV and supplying the file to the old script. A wiki will be updated to describe usage of each function, although they are appropriately named and coments are included inline with the code.
 
