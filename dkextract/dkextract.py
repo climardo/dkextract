@@ -1,10 +1,11 @@
-import json, re, requests, sys, private_data, pickle, os.path, time
+import json, re, requests, private_data, pickle, os.path, tempfile
 from os import path
 
 # Global value modified by login_to_dk()
 login_valid = False
+stored_cookies = tempfile.gettempdir() + '/stored_cookies'
 
-def login_to_dk(session, cookies_file='stored_cookies', login_data=private_data.creds, strict=False):
+def login_to_dk(session, cookies_file=stored_cookies, login_data=private_data.creds, strict=False):
     # The following lines read a global variable to reduce the time it takes to process this function
     # Without this check, calling this function would always verify cookies each time it is called
     # This function will run at least once, but can be presumed True afterwards
@@ -55,12 +56,12 @@ def login_to_dk(session, cookies_file='stored_cookies', login_data=private_data.
             login_valid = False
             return False  
 
-def load_stored_cookies(session, cookies_file='stored_cookies'):
+def load_stored_cookies(session, cookies_file=stored_cookies):
     # Load stored cookies to session
     with open(cookies_file, 'rb') as f:
         session.cookies.update(pickle.load(f))
 
-def store_cookies(session, cookies_file='stored_cookies'):
+def store_cookies(session, cookies_file=stored_cookies):
     # Store new session cookies to file
         with open(cookies_file, 'wb') as f:
             pickle.dump(session.cookies, f)
@@ -288,3 +289,18 @@ def add_weekly_json(json_file, session, contest_id, week, year=2020):
     
     # Return the list in JSON format
     return json.dumps(original)
+
+def get_latest_contest_id(session, username):
+    # URL used in post request with parameters (week, year) passed in function
+    get_contests_url = f"https://api.draftkings.com/contests/v1/users/{username}?format=json"
+
+    # If login_to_dk is successful, then return contestKey
+    if login_to_dk(session):
+        get_contests  = session.get(get_contests_url)
+        if get_contests.status_code == requests.codes.ok:
+            contest_key = json.loads(get_contests.text)['userProfile']['enteredContests'][0]['contestKey']
+            return contest_key
+        else:
+            return ''
+    else:
+        return ''
