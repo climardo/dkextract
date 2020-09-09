@@ -1,5 +1,7 @@
-import json, re, requests, private_data, pickle, os.path, tempfile
+import json, re, requests, private_data, pickle, tempfile
 from os import path
+from datetime import datetime
+from dateutil import parser, tz
 
 # Global value modified by login_to_dk()
 login_valid = False
@@ -296,7 +298,7 @@ def get_latest_contest_id(session, username):
 
     # If login_to_dk is successful, then return contestKey
     if login_to_dk(session):
-        get_contests  = session.get(get_contests_url)
+        get_contests = session.get(get_contests_url)
         if get_contests.status_code == requests.codes.ok:
             contest_key = json.loads(get_contests.text)['userProfile']['enteredContests'][0]['contestKey']
             return contest_key
@@ -304,3 +306,25 @@ def get_latest_contest_id(session, username):
             return ''
     else:
         return ''
+
+def get_contest_details(session, contest_id):
+    # URL used in post request with parameters (week, year) passed in function
+    get_contests_url = f"https://api.draftkings.com/contests/v1/contests/{contest_id}?format=json"
+
+    # If login_to_dk is successful, then return contestKey
+    if login_to_dk(session):
+        get_contests = session.get(get_contests_url)
+        if get_contests.status_code == requests.codes.ok:
+            return json.loads(get_contests.text)
+        else:
+            return ''
+    else:
+        return ''
+
+def get_contest_start(contest_details):
+    start_time = contest_details['contestDetail']['contestStartTime'].split('Z')[0]
+    utc_time = parser.parse(start_time)
+    utc_time = utc_time.replace(tzinfo=tz.gettz('UTC'))
+    local_time = utc_time.astimezone(tz.tzlocal())
+    contest_start = local_time.strftime('%b %d, %Y %H:%M:%S')
+    return contest_start
