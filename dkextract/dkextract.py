@@ -1,7 +1,8 @@
-import json, re, requests, private_data, pickle, tempfile
+import json, re, requests, private_data, pickle, tempfile, os
 from os import path
 from datetime import datetime
 from dateutil import parser, tz
+from lxml import html
 
 # Global value modified by login_to_dk()
 login_valid = False
@@ -322,9 +323,34 @@ def get_contest_details(session, contest_id):
         return ''
 
 def get_contest_start(contest_details):
+    # contest_details includes contestStartTime key, extract this value and remove the trailing 'Z'
     start_time = contest_details['contestDetail']['contestStartTime'].split('Z')[0]
+
+    # Use parser from dateutil to create a datetime object and add UTC time zone
     utc_time = parser.parse(start_time)
     utc_time = utc_time.replace(tzinfo=tz.gettz('UTC'))
+
+    # Create a new datetime object from utc_time but set local time zone
     local_time = utc_time.astimezone(tz.tzlocal())
+
+    # Convert local_time to a string compatible with the JavaScript format and return this value
     contest_start = local_time.strftime('%b %d, %Y %H:%M:%S')
     return contest_start
+
+def get_submitted_list(session, contest_id):
+    
+    url = f"https://www.draftkings.com/contest/detailspop?contestId={contest_id}"
+
+    if login_to_dk(session):
+        get_submitted = session.get(url)
+        if get_submitted.status_code == requests.codes.ok:
+            tree = html.fromstring(get_submitted.content)
+            entrants = tree.xpath('//*[@id="entrants-table"]/tbody/tr[*]/td[*]/span/text()')
+            return entrants
+
+def get_not_submitted_list(session, contest_id, all_members=None):
+    if not all_members:
+        all_members = set(private_data.all_members)
+    submitted = set(get_submitted_list(session, contest_id))
+    not_submitted = all_members - submitted
+    return not_submitted

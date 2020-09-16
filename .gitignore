@@ -1,5 +1,6 @@
 private_data.py
 stored_cookies
+*.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
