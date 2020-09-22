@@ -135,7 +135,7 @@ def get_member_lineup(session, contest_id, user_name):
     if login_to_dk(session):
         get_roster = session.get(roster_url)
         if get_roster.status_code == requests.codes.ok:
-            return json.loads(get_roster.text)
+            return json.loads(get_roster.content)
         else:
             return {}
     else:
@@ -164,6 +164,14 @@ def get_all_drafted(session, contest_id):
             if not any(d['displayName'] == player['displayName'] for d in all_players):
                 all_players.append(player)
     return all_players
+
+def set_winning_value(rank, values=None):
+    if not values:
+        values = private_data.values
+    if values.get(rank):
+        return values.get(rank)
+    else:
+        return 0
 
 def set_fpts_salary(all_players):
     # Provide a list of all players, probably using get_all_players()
@@ -257,7 +265,12 @@ def generate_results(session, contest_id, week, year=2020):
     weekly = get_member_scores(session, contest_id)['leaderBoard']
     for member in weekly:
         # Extract specific keys for each member and add as dict to members_filter[]
-        member_weekly = {"userName": member['userName'], "rank": member['rank'], "fantasyPoints": member['fantasyPoints']}
+        member_weekly = {
+            "userName": member['userName'],
+            "rank": member['rank'],
+            "fantasyPoints": member['fantasyPoints'],
+            "winningValue": set_winning_value(member['rank'])
+            }
         members_filtered.append(member_weekly)
     
     # Generate superlatives
