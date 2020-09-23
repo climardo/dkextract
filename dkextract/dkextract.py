@@ -270,7 +270,7 @@ def generate_results(session, contest_id, week, year=2020):
             "rank": member['rank'],
             "fantasyPoints": member['fantasyPoints'],
             "winningValue": set_winning_value(member['rank'])
-            }
+        }
         members_filtered.append(member_weekly)
     
     # Generate superlatives
@@ -286,9 +286,19 @@ def generate_results(session, contest_id, week, year=2020):
     bust['draftedBy'] = get_drafted_by(bust, all_lineups)
     draft_dodger = get_draft_dodger(all_players, all_drafted)
     
+    contest_details = get_contest_details(session, contest_id)
+    contest_start = get_contest_start(contest_details)
     # Add the week as a seprate value and add members_filtered[] as a value of "members"
-    members_dict = {"week": int(week), "contest_id": contest_id, "members": members_filtered, "mvp": mvp, "sleeper": sleeper, "bust": bust, "draft_dodger": draft_dodger}
-
+    members_dict = {
+        "week": int(week),
+        "contest_id": contest_id,
+        "contest_start": contest_start,
+        "members": members_filtered,
+        "mvp": mvp,
+        "sleeper": sleeper,
+        "bust": bust,
+        "draft_dodger": draft_dodger
+    }
     return members_dict
 
 def add_weekly_json(json_file, session, contest_id, week, year=2020):
