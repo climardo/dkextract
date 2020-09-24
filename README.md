@@ -16,12 +16,13 @@ dkextract.get_all_players(session=s, week=1, year=2020)
 This tool will look for DraftKings credentials string in `private_data.py` (relative path). The file should look like this:
 ```
 creds = '{"login":"YOUR@EMAIL.COM","password":"YOUR_PASSWORD","host":"api.draftkings.com","challengeResponse":{"solution":"","type":"Recaptcha"}}'
+all_members = ["dk_username1", "dk_username2", "dk_username3"]
+values = {
+        1: 100,
+        2: 50,
+        3: 25
+    }
 ```
-
-# To-do list
-- `get_latest_contest_id()`: Get the contestId of the latest contest for the logged in user
-- `get_week()` & `get_year()`: figure out if the date and year can be extracted from DraftKings responses to existing POST and GET requests. Possibly something related to the `contest_id`.
-- Create a wiki
 
 # Thank you
 Thanks for taking a look at my tool. Please feel free to provide feedback or suggestions, but notice, this code was created and written for fun.
