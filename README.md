@@ -12,12 +12,17 @@ s = requests.session()
 dkextract.get_all_players(session=s, week=1, year=2020)
 ```
 
-## Storing DraftKings credentials
-This tool will look for DraftKings credentials string in `private_data.py` (relative path). The file should look like this:
+## DraftKings credentials and other values
+This tool will look for DraftKings credentials in the following environment variables:
 ```
-creds = '{"login":"YOUR@EMAIL.COM","password":"YOUR_PASSWORD","host":"api.draftkings.com","challengeResponse":{"solution":"","type":"Recaptcha"}}'
-all_members = ["dk_username1", "dk_username2", "dk_username3"]
-values = {
+export DKUSER=dkuser@email.com
+export DKPASS=dkp@ssw0rd
+```
+
+Some other values that are not obvious when using the tool:
+```
+all_members = set(["dk_username1", "dk_username2", "dk_username3"])
+winning_values = {
         1: 100,
         2: 50,
         3: 25

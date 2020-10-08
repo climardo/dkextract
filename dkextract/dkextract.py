@@ -1,14 +1,15 @@
-import json, re, requests, private_data, pickle, tempfile, os
-from os import path
+import json, re, requests, pickle
+from os import path, environ, remove
 from datetime import datetime
 from dateutil import parser, tz
 from lxml import html
+from tempfile import gettempdir
 
 # Global value modified by login_to_dk()
 login_valid = False
-stored_cookies = tempfile.gettempdir() + '/stored_cookies'
+stored_cookies = gettempdir() + '/stored_cookies'
 
-def login_to_dk(session, cookies_file=stored_cookies, login_data=private_data.creds, strict=False):
+def login_to_dk(session, cookies_file=stored_cookies, strict=False):
     # The following lines read a global variable to reduce the time it takes to process this function
     # Without this check, calling this function would always verify cookies each time it is called
     # This function will run at least once, but can be presumed True afterwards
@@ -17,6 +18,14 @@ def login_to_dk(session, cookies_file=stored_cookies, login_data=private_data.cr
     if login_valid and not strict:
         return True
     # Session used to check cookies before they are passed to 'session' object
+    dk_user = environ['DKUSER']
+    dk_pass = environ['DKPASS']
+    def create_login_string(dk_user, dk_pass):
+        login_dict = {'login': dk_user, 'password': dk_pass, 'host':'api.draftkings.com', 'challengeResponse':{'solution': '', 'type': 'Recaptcha'}}
+        login_json = json.dumps(login_dict)
+        return login_json.replace(' ', '')
+    login_data = create_login_string(dk_user, dk_pass)
+
     temp_session = requests.session()
     
     # Headers used when logging in to DraftKings
@@ -42,7 +51,7 @@ def login_to_dk(session, cookies_file=stored_cookies, login_data=private_data.cr
         except:
             # There is a problem with the data in the provided cookies_file
             # Remove cookies_file and run this function again to reach the following else statement
-            os.remove(cookies_file)
+            remove(cookies_file)
             return login_to_dk(session)
     else:
         # Get new cookies to be stored in cookies_file
@@ -55,7 +64,7 @@ def login_to_dk(session, cookies_file=stored_cookies, login_data=private_data.cr
             return True
         # If login and GET fail, then output the status code, headers and text of the login attempt
         else:
-            print(f"Failed login attempt, status code: {login_attempt.status_code}.\nHeaders:\n{login_attempt.headers}\nText:{login_attempt.text}")
+            print(f"Failed login attempt, status code: {login_attempt.status_code}.\nHeaders:\n{login_attempt.headers}\nText:{login_attempt.text}\nCredentials:{login_data}")
             login_valid = False
             return False  
 
@@ -165,11 +174,9 @@ def get_all_drafted(session, contest_id):
                 all_players.append(player)
     return all_players
 
-def set_winning_value(rank, values=None):
-    if not values:
-        values = private_data.values
-    if values.get(rank):
-        return values.get(rank)
+def set_winning_value(rank, winning_values=None):
+    if winning_values.get(rank):
+        return winning_values.get(rank)
     else:
         return 0
 
@@ -372,8 +379,7 @@ def get_submitted_list(session, contest_id):
             return entrants
 
 def get_not_submitted_list(session, contest_id, all_members=None):
-    if not all_members:
-        all_members = set(private_data.all_members)
+    # Provide all_members as a set
     submitted = set(get_submitted_list(session, contest_id))
     not_submitted = all_members - submitted
     return not_submitted

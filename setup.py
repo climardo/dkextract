@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dkextract", # Replace with your own username
-    version="1.2",
+    version="1.3",
     author="Carlos Limardo",
     author_email="climardo@gmail.com",
     description="A tool to get certain data from DraftKings",
@@ -15,7 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU General Public License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7.3',
