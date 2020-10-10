@@ -21,13 +21,11 @@ export DKPASS=dkp@ssw0rd
 
 Some other values that are not obvious when using the tool:
 ```
-all_members = set(["dk_username1", "dk_username2", "dk_username3"])
-winning_values = {
-        1: 100,
-        2: 50,
-        3: 25
-    }
+dkextract.all_members = set(["dk_username1", "dk_username2", "dk_username3"])
+dkextract.winning_values = {1: 100, 2: 50, 3: 25}
 ```
+- `all_members` is a **set** of all DraftKings member names
+- `winning_values` is a value assigned to a rank. In this example, first place (rank 1 or `1:`) is assigned a value of `100`. 
 
 # Thank you
 Thanks for taking a look at my tool. Please feel free to provide feedback or suggestions, but notice, this code was created and written for fun.

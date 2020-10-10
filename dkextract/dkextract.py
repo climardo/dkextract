@@ -1,6 +1,6 @@
 import json, re, requests, pickle
 from os import path, environ, remove
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import parser, tz
 from lxml import html
 from tempfile import gettempdir
@@ -8,6 +8,8 @@ from tempfile import gettempdir
 # Global value modified by login_to_dk()
 login_valid = False
 stored_cookies = gettempdir() + '/stored_cookies'
+winning_values = None
+all_members = None
 
 def login_to_dk(session, cookies_file=stored_cookies, strict=False):
     # The following lines read a global variable to reduce the time it takes to process this function
@@ -17,15 +19,20 @@ def login_to_dk(session, cookies_file=stored_cookies, strict=False):
     global login_valid
     if login_valid and not strict:
         return True
-    # Session used to check cookies before they are passed to 'session' object
+
+    # Read values from environment
     dk_user = environ['DKUSER']
     dk_pass = environ['DKPASS']
+
+    # Use a method to create and return the string
     def create_login_string(dk_user, dk_pass):
         login_dict = {'login': dk_user, 'password': dk_pass, 'host':'api.draftkings.com', 'challengeResponse':{'solution': '', 'type': 'Recaptcha'}}
         login_json = json.dumps(login_dict)
         return login_json.replace(' ', '')
+
     login_data = create_login_string(dk_user, dk_pass)
 
+    # Session used to check cookies before they are passed to 'session' object
     temp_session = requests.session()
     
     # Headers used when logging in to DraftKings
@@ -78,7 +85,7 @@ def store_cookies(session, cookies_file=stored_cookies):
         with open(cookies_file, 'wb') as f:
             pickle.dump(session.cookies, f)
 
-def get_all_players(session, week, year=2020):
+def get_all_players(session, week, year):
     # Function to obtain JSON (as a dictionary) of all player stats including fantasy points and salary
     # Header used in POST request
     weekly_headers = {
@@ -174,7 +181,7 @@ def get_all_drafted(session, contest_id):
                 all_players.append(player)
     return all_players
 
-def set_winning_value(rank, winning_values=None):
+def set_winning_value(rank):
     if winning_values.get(rank):
         return winning_values.get(rank)
     else:
@@ -264,7 +271,14 @@ def get_draft_dodger(all_players, all_drafted):
 
     return draft_dodger
 
-def generate_results(session, contest_id, week, year=2020):
+def generate_results(session, contest_id, week=None, year=None):
+    if week is None or year is None:
+        contest_date = get_date(session, contest_id)
+        if week is None:
+            week = contest_date['week']
+        if year is None:
+            year = contest_date['year']
+
     # Returns a dict including the week and list of members with their rank and fantasyPoints
     # Start with an empty list
     members_filtered = []
@@ -308,7 +322,13 @@ def generate_results(session, contest_id, week, year=2020):
     }
     return members_dict
 
-def add_weekly_json(json_file, session, contest_id, week, year=2020):
+def add_weekly_json(json_file, session, contest_id, week=None, year=None):
+    if week is None or year is None:
+        contest_date = get_date(session, contest_id)
+        if week is None:
+            week = contest_date['week']
+        if year is None:
+            year = contest_date['year']
     # If the json_file does not exist or contains invalid data, start wih an empty list
     try:
         with open(json_file) as f:
@@ -368,18 +388,36 @@ def get_contest_start(contest_details):
     return contest_start
 
 def get_submitted_list(session, contest_id):
-    
+    # The URL of the page containing contest data before contest is live
     url = f"https://www.draftkings.com/contest/detailspop?contestId={contest_id}"
 
+    # Verify login
     if login_to_dk(session):
         get_submitted = session.get(url)
+        # If page is loaded successfully, get the list of users from entrants-table
         if get_submitted.status_code == requests.codes.ok:
             tree = html.fromstring(get_submitted.content)
             entrants = tree.xpath('//*[@id="entrants-table"]/tbody/tr[*]/td[*]/span/text()')
             return entrants
 
-def get_not_submitted_list(session, contest_id, all_members=None):
+def get_not_submitted_list(session, contest_id):
     # Provide all_members as a set
+    global all_members
     submitted = set(get_submitted_list(session, contest_id))
     not_submitted = all_members - submitted
-    return not_submitted
+    return list(not_submitted)
+
+def get_date(session, contest_id, week1='Sep 10, 2020 20:20:00'):
+    contest_details = get_contest_details(session, contest_id)
+
+    contest_start_string = get_contest_start(contest_details)
+    week1_date = datetime.strptime(week1, '%b %d, %Y %H:%M:%S')
+    contest_start = datetime.strptime(contest_start_string, '%b %d, %Y %H:%M:%S')
+    
+    week_num = (contest_start - week1_date).days / 7
+
+    week_dict = dict()
+    week_dict['week'] = int(week_num + 1)
+    week_dict['year'] = contest_start.year
+
+    return week_dict
