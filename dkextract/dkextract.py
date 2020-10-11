@@ -8,8 +8,6 @@ from tempfile import gettempdir
 # Global value modified by login_to_dk()
 login_valid = False
 stored_cookies = gettempdir() + '/stored_cookies'
-winning_values = None
-all_members = None
 
 def login_to_dk(session, cookies_file=stored_cookies, strict=False):
     # The following lines read a global variable to reduce the time it takes to process this function
@@ -181,7 +179,7 @@ def get_all_drafted(session, contest_id):
                 all_players.append(player)
     return all_players
 
-def set_winning_value(rank):
+def set_winning_value(rank, winning_values):
     if winning_values.get(rank):
         return winning_values.get(rank)
     else:
@@ -271,7 +269,7 @@ def get_draft_dodger(all_players, all_drafted):
 
     return draft_dodger
 
-def generate_results(session, contest_id, week=None, year=None):
+def generate_results(session, contest_id, week=None, year=None, winning_values=None):
     if week is None or year is None:
         contest_date = get_date(session, contest_id)
         if week is None:
@@ -290,7 +288,7 @@ def generate_results(session, contest_id, week=None, year=None):
             "userName": member['userName'],
             "rank": member['rank'],
             "fantasyPoints": member['fantasyPoints'],
-            "winningValue": set_winning_value(member['rank'])
+            "winningValue": set_winning_value(member['rank'], winning_values)
         }
         members_filtered.append(member_weekly)
     
@@ -400,9 +398,8 @@ def get_submitted_list(session, contest_id):
             entrants = tree.xpath('//*[@id="entrants-table"]/tbody/tr[*]/td[*]/span/text()')
             return entrants
 
-def get_not_submitted_list(session, contest_id):
+def get_not_submitted_list(session, contest_id, all_members):
     # Provide all_members as a set
-    global all_members
     submitted = set(get_submitted_list(session, contest_id))
     not_submitted = all_members - submitted
     return list(not_submitted)
