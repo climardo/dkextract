@@ -172,11 +172,13 @@ def get_all_drafted(session, contest_id):
     # Filter through each member's list of players contained within get_member_lineup() output
     for member in get_member_scores(session, contest_id)['leaderBoard']:
         user_name = member['userName']
-        user_lineup = get_member_lineup(session, contest_id, user_name)['entries'][0]['roster']['scorecards']
-        for player in user_lineup:
-            # Add unique players to all_players list 
-            if not any(d['displayName'] == player['displayName'] for d in all_players):
-                all_players.append(player)
+        user_entries = get_member_lineup(session, contest_id, user_name)['entries'][0]
+        if 'roster' in user_entries.keys():
+            user_lineup = user_entries['roster']['scorecards']
+            for player in user_lineup:
+                # Add unique players to all_players list 
+                if not any(d['displayName'] == player['displayName'] for d in all_players):
+                    all_players.append(player)
     return all_players
 
 def set_winning_value(rank, winning_values):
