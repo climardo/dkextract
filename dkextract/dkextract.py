@@ -8,6 +8,7 @@ from tempfile import gettempdir
 # Global value modified by login_to_dk()
 login_valid = False
 stored_cookies = gettempdir() + '/stored_cookies'
+week1='Sep 9, 2021 20:20:00'
 
 def login_to_dk(session, cookies_file=stored_cookies, strict=False):
     # The following lines read a global variable to reduce the time it takes to process this function
@@ -406,7 +407,7 @@ def get_not_submitted_list(session, contest_id, all_members):
     not_submitted = all_members - submitted
     return list(not_submitted)
 
-def get_date(session, contest_id, week1='Sep 10, 2020 20:20:00'):
+def get_date(session, contest_id, week1=week1):
     contest_details = get_contest_details(session, contest_id)
 
     contest_start_string = get_contest_start(contest_details)
