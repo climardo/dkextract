@@ -418,6 +418,6 @@ def get_date(session, contest_id, week1=week1):
 
     week_dict = dict()
     week_dict['week'] = int(week_num + 1)
-    week_dict['year'] = contest_start.year
+    week_dict['year'] = week1_date.year
 
     return week_dict
