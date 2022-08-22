@@ -10,6 +10,3 @@ pylint = "*"
 requests = "*"
 python-dateutil = "*"
 lxml = "*"
-
-[requires]
-python_version = "3.7.3"

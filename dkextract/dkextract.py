@@ -8,7 +8,7 @@ from tempfile import gettempdir
 # Global value modified by login_to_dk()
 login_valid = False
 stored_cookies = gettempdir() + '/stored_cookies'
-week1='Sep 9, 2021 20:20:00'
+week1='Sep 8, 2022 20:20:00'
 
 def login_to_dk(session, cookies_file=stored_cookies, strict=False):
     # The following lines read a global variable to reduce the time it takes to process this function
