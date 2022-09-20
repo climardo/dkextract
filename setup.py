@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="dkextract",
-    version="1.48",
+    version="1.49",
     author="Carlos Limardo",
     author_email="climardo@gmail.com",
     description="A tool to get certain data from DraftKings",

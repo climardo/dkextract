@@ -1,4 +1,4 @@
-import json, re, requests, pickle
+import json, re, requests, pickle, math
 from os import path, environ, remove
 from datetime import datetime, timedelta
 from dateutil import parser, tz
@@ -417,7 +417,7 @@ def get_date(session, contest_id, week1=week1):
     week_num = (contest_start - week1_date).days / 7
 
     week_dict = dict()
-    week_dict['week'] = int(week_num + 1)
+    week_dict['week'] = math.ceil(week_num) + 1
     week_dict['year'] = week1_date.year
 
     return week_dict
